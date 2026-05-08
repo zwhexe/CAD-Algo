@@ -1,0 +1,74 @@
+# ==========================================
+# 编译产物 (Build Outputs)
+# ==========================================
+build/
+bin/
+lib/
+out/
+dist/
+[Bb]uild/
+
+# 排除 CMake 生成的中间文件
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+Makefile
+cmake-build-*/
+_deps/
+
+# 排除特定的编译结果
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.exp
+*.pdb
+*.ilk
+
+# ==========================================
+# IDE / 编辑器相关 (IDE & Editors)
+# ==========================================
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# CLion / JetBrains
+.idea/
+cmake-build-debug/
+cmake-build-release/
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.filters
+*.user
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+
+# ==========================================
+# 操作系统临时文件 (OS Metadata)
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# 其他 (Misc)
+# ==========================================
+*.log
+*.tmp
+*.swp
+.cache/
