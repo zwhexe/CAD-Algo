@@ -11,7 +11,9 @@ Window::Window(int width, int height, const std::string& title)
     // 初始化 GLFW
     if (!glfwInit()) 
         throw std::runtime_error("Failed to initialize GLFW");
-    
+    else
+        std::cout << "========== GLFW initialized successfully ==========\n" << std::endl;
+
     // OpenGL 版本设置
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

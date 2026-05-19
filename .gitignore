@@ -72,3 +72,5 @@ desktop.ini
 *.tmp
 *.swp
 .cache/
+external/glad/include/KHR/khrplatform.h:Zone.Identifier
+external/glad/include/glad/glad.h:Zone.Identifier

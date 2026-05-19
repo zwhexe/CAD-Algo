@@ -18,12 +18,11 @@ static const int NUM_COLORS = sizeof(LAYER_COLORS) / sizeof(LAYER_COLORS[0]);
 
 CurveRenderer::CurveRenderer() 
 {
-    // 创建着色器
     m_shader = std::make_unique<Shader>("shaders/basic.vert", "shaders/basic.frag");
     
     initBuffers();
     
-    // 默认视图
+    // X axis: [-1, 5], Y axis: [-1, 4] to comfortably fit the initial control points
     setView(-1.0f, 5.0f, -1.0f, 4.0f);
 }
 
@@ -40,7 +39,7 @@ void CurveRenderer::initBuffers()
     // 线条 VAO/VBO
     glGenVertexArrays(1, &m_lineVAO);
     glGenBuffers(1, &m_lineVBO);
-    
+    // Bind and setup line VAO/VBO 
     glBindVertexArray(m_lineVAO);
     glBindBuffer(GL_ARRAY_BUFFER, m_lineVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 1000, nullptr, GL_DYNAMIC_DRAW);
@@ -50,14 +49,14 @@ void CurveRenderer::initBuffers()
     // 点 VAO/VBO
     glGenVertexArrays(1, &m_pointVAO);
     glGenBuffers(1, &m_pointVBO);
-    
+    // Bind and setup point VAO/VBO 
     glBindVertexArray(m_pointVAO);
     glBindBuffer(GL_ARRAY_BUFFER, m_pointVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 100, nullptr, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     
-    glBindVertexArray(0);
+    glBindVertexArray(0);  // Unbind VAO
 }
 
 void CurveRenderer::setView(float left, float right, float bottom, float top) 
@@ -70,13 +69,13 @@ void CurveRenderer::updateProjection(float left, float right, float bottom, floa
     // 正交投影矩阵 (列主序)
     float near = -1.0f, far = 1.0f;
     std::memset(m_projection, 0, sizeof(m_projection));
-    m_projection[0] = 2.0f / (right - left);
-    m_projection[5] = 2.0f / (top - bottom);
-    m_projection[10] = -2.0f / (far - near);
-    m_projection[12] = -(right + left) / (right - left);
-    m_projection[13] = -(top + bottom) / (top - bottom);
-    m_projection[14] = -(far + near) / (far - near);
-    m_projection[15] = 1.0f;
+    m_projection[0] = 2.0f / (right - left);    // X 轴缩放
+    m_projection[5] = 2.0f / (top - bottom);    // Y 轴缩放
+    m_projection[10] = -2.0f / (far - near);    // Z 轴缩放
+    m_projection[12] = -(right + left) / (right - left);  // X 轴平移
+    m_projection[13] = -(top + bottom) / (top - bottom);   // Y 轴平移
+    m_projection[14] = -(far + near) / (far - near);       // Z 轴平移
+    m_projection[15] = 1.0f;    // 齐次坐标
 }
 
 void CurveRenderer::render(const nurbs::BezierCurve& curve, double u, bool showDeCasteljau) 

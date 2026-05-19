@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch ex_bezier_decasteljau",
+            "program": "${workspaceFolder}/build/ex_bezier_decasteljau",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "env": {
+                "DISPLAY": ":0",
+                "WAYLAND_DISPLAY": "wayland-0",
+                "XDG_RUNTIME_DIR": "/run/user/1000"
+            }
+        }
+    ]
+}

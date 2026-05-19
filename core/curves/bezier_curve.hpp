@@ -223,8 +223,7 @@ private:
     
     // 齐次坐标表示 (w*x, w*y, w*z, w)
     struct HomogeneousPoint 
-
-{
+    {
         double x, y, z, w;
         
         HomogeneousPoint(double x = 0, double y = 0, double z = 0, double w = 1)
@@ -236,18 +235,19 @@ private:
         
         // 线性插值
         static HomogeneousPoint lerp(const HomogeneousPoint& a, 
-                                     const HomogeneousPoint& b, double t) {
-            return {
-                (1-t) * a.x + t * b.x,
-                (1-t) * a.y + t * b.y,
-                (1-t) * a.z + t * b.z,
-                (1-t) * a.w + t * b.w
-            };
+                                     const HomogeneousPoint& b, double t) 
+        {
+            return { (1-t) * a.x + t * b.x,
+                     (1-t) * a.y + t * b.y,
+                     (1-t) * a.z + t * b.z,
+                     (1-t) * a.w + t * b.w };
         }
         
         // 透视除法，投影回 3D
-        Point project() const {
-            if (std::abs(w) < 1e-10) return Point(0, 0, 0);
+        Point project() const 
+        {
+            if (std::abs(w) < 1e-10) 
+                return Point(0, 0, 0);
             return Point(x/w, y/w, z/w);
         }
         

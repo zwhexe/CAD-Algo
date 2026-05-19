@@ -263,36 +263,32 @@ void BezierCurve::setControlPoints(const PointList& points) {
 // RationalBezierCurve 实现 (Section 1.4)
 //==============================================================================
 
-RationalBezierCurve::RationalBezierCurve(const PointList& controlPoints, 
-                                         const std::vector<double>& weights)
-    : m_controlPoints(controlPoints)
-    , m_weights(weights)
+RationalBezierCurve::RationalBezierCurve(const PointList& controlPoints, const std::vector<double>& weights)
+    : m_controlPoints(controlPoints), m_weights(weights)
 {
-    if (controlPoints.size() < 2) {
+    if (controlPoints.size() < 2)
         throw std::invalid_argument("Rational Bézier curve requires at least 2 control points");
-    }
-    if (controlPoints.size() != weights.size()) {
+    
+    if (controlPoints.size() != weights.size())
         throw std::invalid_argument("Number of weights must match number of control points");
-    }
 }
 
 RationalBezierCurve::RationalBezierCurve(const PointList& controlPoints)
-    : m_controlPoints(controlPoints)
-    , m_weights(controlPoints.size(), 1.0)  // 所有权重为1
+    : m_controlPoints(controlPoints), m_weights(controlPoints.size(), 1.0)  // 所有权重为1
 {
-    if (controlPoints.size() < 2) {
+    if (controlPoints.size() < 2) 
         throw std::invalid_argument("Rational Bézier curve requires at least 2 control points");
-    }
 }
 
-std::vector<RationalBezierCurve::HomogeneousPoint> RationalBezierCurve::toHomogeneous() const {
+std::vector<RationalBezierCurve::HomogeneousPoint> RationalBezierCurve::toHomogeneous() const 
+{
     std::vector<HomogeneousPoint> result;
     result.reserve(m_controlPoints.size());
     
-    for (size_t i = 0; i < m_controlPoints.size(); i++) {
+    for (size_t i = 0; i < m_controlPoints.size(); i++) 
+    {
         result.emplace_back(m_controlPoints[i], m_weights[i]);
-    }
-    
+    } 
     return result;
 }
 
@@ -309,15 +305,18 @@ std::vector<RationalBezierCurve::HomogeneousPoint> RationalBezierCurve::toHomoge
  * 2. 在 4D 空间做标准 de Casteljau (线性插值)
  * 3. (X, Y, Z, W) → (X/W, Y/W, Z/W)  透视除法回到 3D
  */
-Point RationalBezierCurve::evaluate(double u) const {
+Point RationalBezierCurve::evaluate(double u) const 
+{
     const int n = degree();
     
     // 转换为齐次坐标
     auto Q = toHomogeneous();
     
     // 在齐次空间做 de Casteljau
-    for (int r = 1; r <= n; r++) {
-        for (int i = 0; i <= n - r; i++) {
+    for (int r = 1; r <= n; r++) 
+    {
+        for (int i = 0; i <= n - r; i++) 
+        {
             Q[i] = HomogeneousPoint::lerp(Q[i], Q[i + 1], u);
         }
     }
@@ -332,7 +331,8 @@ Point RationalBezierCurve::evaluate(double u) const {
  * Equation 1.19:
  *   R_{i,n}(u) = (B_{i,n}(u) · w_i) / (Σ_j B_{j,n}(u) · w_j)
  */
-double RationalBezierCurve::rationalBasis(int i, double u) const {
+double RationalBezierCurve::rationalBasis(int i, double u) const 
+{
     const int n = degree();
     
     // 分子: B_{i,n}(u) · w_i
@@ -340,14 +340,13 @@ double RationalBezierCurve::rationalBasis(int i, double u) const {
     
     // 分母: Σ B_{j,n}(u) · w_j
     double denominator = 0.0;
-    for (int j = 0; j <= n; j++) {
+    for (int j = 0; j <= n; j++) 
+    {
         denominator += BezierCurve::bernsteinBasis(j, n, u) * m_weights[j];
     }
     
-    if (std::abs(denominator) < 1e-10) {
+    if (std::abs(denominator) < 1e-10)
         return 0.0;
-    }
-    
     return numerator / denominator;
 }
 
@@ -356,7 +355,8 @@ double RationalBezierCurve::rationalBasis(int i, double u) const {
  * 
  * 用于可视化有理曲线的构造过程
  */
-std::vector<PointList> RationalBezierCurve::deCasteljauPyramid(double u) const {
+std::vector<PointList> RationalBezierCurve::deCasteljauPyramid(double u) const 
+{
     const int n = degree();
     std::vector<PointList> pyramid;
     
@@ -364,21 +364,23 @@ std::vector<PointList> RationalBezierCurve::deCasteljauPyramid(double u) const {
     std::vector<std::vector<HomogeneousPoint>> homoPyramid;
     homoPyramid.push_back(toHomogeneous());
     
-    for (int r = 1; r <= n; r++) {
+    for (int r = 1; r <= n; r++) 
+    {
         std::vector<HomogeneousPoint> level;
         const auto& prev = homoPyramid[r - 1];
         
-        for (size_t i = 0; i < prev.size() - 1; i++) {
+        for (size_t i = 0; i < prev.size() - 1; i++)
             level.push_back(HomogeneousPoint::lerp(prev[i], prev[i + 1], u));
-        }
         
         homoPyramid.push_back(level);
     }
     
     // 投影到 3D
-    for (const auto& homoLevel : homoPyramid) {
+    for (const auto& homoLevel : homoPyramid) 
+    {
         PointList level;
-        for (const auto& hp : homoLevel) {
+        for (const auto& hp : homoLevel) 
+        {
             level.push_back(hp.project());
         }
         pyramid.push_back(level);
@@ -398,10 +400,10 @@ std::vector<PointList> RationalBezierCurve::deCasteljauPyramid(double u) const {
  * 
  * 则 C'(u) = (A'(u) - C(u)·w'(u)) / w(u)
  */
-Point RationalBezierCurve::derivative(double u, int order) const {
-    if (order <= 0) {
+Point RationalBezierCurve::derivative(double u, int order) const 
+{
+    if (order <= 0)
         return evaluate(u);
-    }
     
     const int n = degree();
     
@@ -409,31 +411,28 @@ Point RationalBezierCurve::derivative(double u, int order) const {
     double w_u = 0.0;
     Point A_u(0, 0, 0);
     
-    for (int i = 0; i <= n; i++) {
+    for (int i = 0; i <= n; i++) 
+    {
         double B = BezierCurve::bernsteinBasis(i, n, u);
         w_u += B * m_weights[i];
         A_u += m_controlPoints[i] * (B * m_weights[i]);
     }
     
-    if (std::abs(w_u) < 1e-10) {
+    if (std::abs(w_u) < 1e-10)
         return Point(0, 0, 0);
-    }
     
     Point C_u = A_u / w_u;
-    
-    if (order == 1) {
-        // 计算 A'(u) 和 w'(u)
+    if (order == 1) 
+    {   // 计算 A'(u) 和 w'(u)
         // A(u) 和 w(u) 都是 n 次 Bézier 曲线，其导数是 n-1 次
-        
         Point A_prime(0, 0, 0);
         double w_prime = 0.0;
         
-        for (int i = 0; i < n; i++) {
-            // 导数控制点: n * (P_{i+1}·w_{i+1} - P_i·w_i)
+        for (int i = 0; i < n; i++) 
+        { // 导数控制点: n * (P_{i+1}·w_{i+1} - P_i·w_i)
             Point dA = (m_controlPoints[i + 1] * m_weights[i + 1] - 
                        m_controlPoints[i] * m_weights[i]) * n;
             double dw = (m_weights[i + 1] - m_weights[i]) * n;
-            
             double B = BezierCurve::bernsteinBasis(i, n - 1, u);
             A_prime += dA * B;
             w_prime += dw * B;
@@ -455,28 +454,31 @@ Point RationalBezierCurve::derivative(double u, int order) const {
  * 关键点: 细分后的控制点权重需要从齐次坐标提取
  */
 std::pair<RationalBezierCurve, RationalBezierCurve> 
-RationalBezierCurve::subdivide(double u) const {
+RationalBezierCurve::subdivide(double u) const 
+{
     const int n = degree();
     
     // 在齐次空间计算金字塔
     std::vector<std::vector<HomogeneousPoint>> pyramid;
     pyramid.push_back(toHomogeneous());
     
-    for (int r = 1; r <= n; r++) {
+    for (int r = 1; r <= n; r++) 
+    {
         std::vector<HomogeneousPoint> level;
         const auto& prev = pyramid[r - 1];
         
-        for (size_t i = 0; i < prev.size() - 1; i++) {
+        for (size_t i = 0; i < prev.size() - 1; i++) 
+        {
             level.push_back(HomogeneousPoint::lerp(prev[i], prev[i + 1], u));
         }
-        
         pyramid.push_back(level);
     }
     
     // 提取左曲线
     PointList leftPts;
     std::vector<double> leftWeights;
-    for (int r = 0; r <= n; r++) {
+    for (int r = 0; r <= n; r++) 
+    {
         const auto& hp = pyramid[r][0];
         leftPts.push_back(hp.project());
         leftWeights.push_back(hp.weight());
@@ -485,7 +487,8 @@ RationalBezierCurve::subdivide(double u) const {
     // 提取右曲线
     PointList rightPts;
     std::vector<double> rightWeights;
-    for (int r = n; r >= 0; r--) {
+    for (int r = n; r >= 0; r--) 
+    {
         const auto& hp = pyramid[r].back();
         rightPts.push_back(hp.project());
         rightWeights.push_back(hp.weight());
@@ -497,29 +500,31 @@ RationalBezierCurve::subdivide(double u) const {
     };
 }
 
-PointList RationalBezierCurve::sample(int numSamples) const {
+PointList RationalBezierCurve::sample(int numSamples) const 
+{
     PointList points;
     points.reserve(numSamples);
-    
-    for (int i = 0; i < numSamples; i++) {
+    for (int i = 0; i < numSamples; i++) 
+    {
         double u = static_cast<double>(i) / (numSamples - 1);
         points.push_back(evaluate(u));
     }
-    
     return points;
 }
 
-void RationalBezierCurve::setControlPoint(int index, const Point& p) {
-    if (index < 0 || index >= static_cast<int>(m_controlPoints.size())) {
+void RationalBezierCurve::setControlPoint(int index, const Point& p) 
+{
+    if (index < 0 || index >= static_cast<int>(m_controlPoints.size())) 
         throw std::out_of_range("Control point index out of range");
-    }
-    m_controlPoints[index] = p;
+    
+        m_controlPoints[index] = p;
 }
 
-void RationalBezierCurve::setWeight(int index, double w) {
-    if (index < 0 || index >= static_cast<int>(m_weights.size())) {
+void RationalBezierCurve::setWeight(int index, double w) 
+{
+    if (index < 0 || index >= static_cast<int>(m_weights.size()))
         throw std::out_of_range("Weight index out of range");
-    }
+    
     m_weights[index] = w;
 }
 
@@ -548,13 +553,14 @@ namespace ConicFactory
  *   当 θ > 180° 时，w1 < 0，通常需要分段
  */
 RationalBezierCurve createArc(const Point& center, double radius,
-                               double startAngle, double endAngle) {
+                               double startAngle, double endAngle) 
+{
     // 计算弧度角
     double theta = endAngle - startAngle;
     
     // 如果弧度太大，需要分段 (这里简化处理，假设 θ ≤ 180°)
-    if (std::abs(theta) > M_PI) {
-        // 实际应用中应该分段，这里截断
+    if (std::abs(theta) > M_PI) 
+    { // 实际应用中应该分段，这里截断
         theta = (theta > 0) ? M_PI : -M_PI;
         endAngle = startAngle + theta;
     }
@@ -604,13 +610,13 @@ RationalBezierCurve createQuarterCircle(const Point& center, double radius,
  * 圆不能用单一有理 Bézier 曲线精确表示
  * 需要至少 4 段（每段 ≤ 90°）
  */
-std::vector<RationalBezierCurve> createFullCircle(const Point& center, double radius) {
+std::vector<RationalBezierCurve> createFullCircle(const Point& center, double radius) 
+{
     std::vector<RationalBezierCurve> arcs;
-    
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) 
+    {
         arcs.push_back(createQuarterCircle(center, radius, i));
     }
-    
     return arcs;
 }
 
@@ -623,18 +629,19 @@ std::vector<RationalBezierCurve> createFullCircle(const Point& center, double ra
  */
 RationalBezierCurve createEllipticArc(const Point& center,
                                        double semiMajor, double semiMinor,
-                                       double startAngle, double endAngle) {
+                                       double startAngle, double endAngle) 
+{
     // 先创建单位圆弧
     auto unitArc = createArc(Point(0, 0, 0), 1.0, startAngle, endAngle);
     
     // 缩放控制点
     PointList scaledPts;
-    for (const auto& p : unitArc.controlPoints()) {
+    for (const auto& p : unitArc.controlPoints()) 
+    {
         scaledPts.push_back(Point(center.x + p.x * semiMajor,
                                   center.y + p.y * semiMinor,
                                   center.z + p.z));
     }
-    
     // 权重不变
     return RationalBezierCurve(scaledPts, unitArc.weights());
 }
