@@ -34,7 +34,29 @@ public:
      * 渲染完整的 Bezier 曲线场景
      * 包括：曲线、控制多边形、控制点、de Casteljau 中间过程
      */
-    void render(const nurbs::BezierCurve& curve, double u, bool showDeCasteljau = true);
+    template<typename TCurve>
+    void render(const TCurve& curve, double u, bool showDeCasteljau = true)
+    {
+        m_shader->use();
+        m_shader->setMat4("projection", m_projection); 
+
+        drawControlPolygon(curve.controlPoints(), 0.5f, 0.5f, 0.5f);
+        if (showDeCasteljau && u >= 0.0 && u <= 1.0)
+        {
+            auto pyramid = curve.deCasteljauPyramid(u);
+            drawDeCasteljauPyramid(pyramid);
+        }
+
+        auto curvePoints = curve.sample(100);
+        drawCurve(curvePoints, 0.1f, 0.1f, 0.1f, 3.0f);
+        drawPoints(curve.controlPoints(), 0.2f, 0.4f, 0.8f, 12.0f);
+        
+        if(u >= 0.0 && u <= 1.0) 
+        {
+            nurbs::PointList highlight = {curve.evaluate(u)};
+            drawPoints(highlight, 1.0f, 0.2f, 0.2f, 16.0f);
+        }
+    }
     
     /**
      * 渲染曲线（采样点连线）

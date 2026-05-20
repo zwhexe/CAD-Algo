@@ -1,0 +1,37 @@
+{
+    "editor.minimap.maxColumn": 60,
+    "editor.minimap.showSlider": "always",
+    "editor.minimap.size": "fit",
+    "editor.minimap.renderCharacters": false,
+    "workbench.colorTheme": "Dark Modern",
+    "hediet.vscode-drawio.resizeImages": null,
+    "editor.codeActionsOnSave": {
+
+    },
+    "workbench.colorCustomizations": {
+        "tab.activeBackground": "#07729076",
+        //"editor.lineHighlightBackground": "#ff0000",
+        //"editor.lineHighlightBorder": "#006188",
+    },
+    "debug.onTaskErrors": "showErrors",
+    "security.workspace.trust.untrustedFiles": "open",
+    "explorer.confirmDelete": false,
+
+    //"vim.useCtrlKeys": false,
+    "vim.handleKeys": {
+        "<C-j>": false,
+        "<C-f>": false,
+        "<C-x>": false,
+        "<C-c>": false,
+        "<C-v>": false,
+        "<C-d>": true,
+        "<C-s>": false,
+        "<C-z>": false,
+        "<C-y>": false,
+        "<C-a>": false
+    },
+    "chat.mcp.gallery.enabled": true,
+    "claudeCode.preferredLocation": "panel",
+    "http.proxy": "http://127.0.0.1:10808",
+    "http.proxyStrictSSL": false
+}

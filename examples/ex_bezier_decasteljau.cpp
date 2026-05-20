@@ -15,21 +15,27 @@
 #include "viewer/curve_renderer.hpp"
 #include "core/curves/bezier_curve.hpp"
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 
 // 应用状态
+enum class CurveType { Bezier = 0, RationalBezier = 1 };
 struct AppState 
 {
     nurbs::PointList controlPoints;
+    std::vector<double> weights;
     double u = 0.5;
     bool showDeCasteljau = true;
     int selectedPoint = -1;
+    int focusePoint = -1;
     
     // 视图参数
     float viewLeft = -0.5f;
     float viewRight = 4.5f;
     float viewBottom = -0.5f;
     float viewTop = 3.0f;
+    
+    CurveType nurbsType = CurveType::Bezier;
 };
 
 // 屏幕坐标转世界坐标
@@ -99,6 +105,7 @@ int main()
         {3.0, 2.0, 0.0},  // P2
         {4.0, 0.0, 0.0}   // P3
     };
+    state.weights = {1.0, 1.0, 1.0, 1.0};  // 全部权重为1，普通 Bézier 曲线
     
     // 设置视图
     renderer.setView(state.viewLeft, state.viewRight, state.viewBottom, state.viewTop);
@@ -110,9 +117,14 @@ int main()
                 double mx, my;
                 window.getMousePos(mx, my);
                 nurbs::Point worldPos = screenToWorld(mx, my, window.width(), window.height(), state);
-                state.selectedPoint = findNearestPoint(state.controlPoints, worldPos, 0.3);
+                int hit = findNearestPoint(state.controlPoints, worldPos, 0.3);
+                state.selectedPoint = hit;
+                if (hit >= 0) {
+                    state.focusePoint = hit; // release still keep focusePoint
+                    std::cout << "Focused P" << hit << " weight = " << state.weights[hit] << std::endl;
+                }
             } else {
-                state.selectedPoint = -1;
+                state.selectedPoint = -1; // release just clear selectedPoint
             }
         }
     });
@@ -137,20 +149,40 @@ int main()
         if (action == GLFW_PRESS) {
             if (key == GLFW_KEY_SPACE) {
                 state.showDeCasteljau = !state.showDeCasteljau;
-                std::cout << "de Casteljau visualization: " 
+                std::cout << "deCasteljau visualization: " 
                           << (state.showDeCasteljau ? "ON" : "OFF") << std::endl;
             }
             else if (key == GLFW_KEY_R) {
-                // 重置
-                state.controlPoints = 
-                {
+                state.controlPoints = {
                     {0.0, 0.0, 0.0},
                     {1.0, 2.0, 0.0},
                     {3.0, 2.0, 0.0},
                     {4.0, 0.0, 0.0}
                 };
+                state.weights = {1.0, 1.0, 1.0, 1.0};
                 state.u = 0.5;
+                state.focusePoint = -1;
                 std::cout << "Reset to initial state" << std::endl;
+            }
+            else if (key == GLFW_KEY_LEFT_BRACKET) {
+                if (int fp = state.focusePoint; state.focusePoint >= 0) {
+                    state.weights[fp] = std::max(0.1, state.weights[fp] - 0.1);
+                    std::cout << "w[" << fp << "] = " << state.weights[fp] << std::endl;
+                }
+            }
+            else if (key == GLFW_KEY_RIGHT_BRACKET) {
+                if (int fp = state.focusePoint; state.focusePoint >= 0) {
+                    state.weights[fp] += 0.1;
+                    std::cout << "w[" << fp << "] = " << state.weights[fp] << std::endl;
+                }
+            }
+            else if (key == GLFW_KEY_0) {
+                state.nurbsType = CurveType::Bezier;
+                std::cout << "Mode: Bézier" << std::endl;
+            }
+            else if (key == GLFW_KEY_1) {
+                state.nurbsType = CurveType::RationalBezier;
+                std::cout << "Mode: Rational Bézier" << std::endl;
             }
         }
     });
@@ -179,8 +211,21 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
         
         // 创建曲线并渲染
-        nurbs::BezierCurve curve(state.controlPoints);
-        renderer.render(curve, state.u, state.showDeCasteljau);
+        switch (state.nurbsType) 
+        {
+        case CurveType::Bezier: 
+        {
+            nurbs::BezierCurve curve(state.controlPoints);
+            renderer.render(curve, state.u, state.showDeCasteljau);
+            break;
+        }
+        case CurveType::RationalBezier: 
+        {
+            nurbs::RationalBezierCurve rationalCurve(state.controlPoints, state.weights);
+            renderer.render(rationalCurve, state.u, state.showDeCasteljau);
+            break;
+        } 
+        }
         
         window.swapBuffers();
         window.pollEvents();

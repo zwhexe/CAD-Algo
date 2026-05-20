@@ -69,43 +69,13 @@ void CurveRenderer::updateProjection(float left, float right, float bottom, floa
     // 正交投影矩阵 (列主序)
     float near = -1.0f, far = 1.0f;
     std::memset(m_projection, 0, sizeof(m_projection));
-    m_projection[0] = 2.0f / (right - left);    // X 轴缩放
-    m_projection[5] = 2.0f / (top - bottom);    // Y 轴缩放
-    m_projection[10] = -2.0f / (far - near);    // Z 轴缩放
-    m_projection[12] = -(right + left) / (right - left);  // X 轴平移
-    m_projection[13] = -(top + bottom) / (top - bottom);   // Y 轴平移
-    m_projection[14] = -(far + near) / (far - near);       // Z 轴平移
-    m_projection[15] = 1.0f;    // 齐次坐标
-}
-
-void CurveRenderer::render(const nurbs::BezierCurve& curve, double u, bool showDeCasteljau) 
-{
-    m_shader->use();
-    m_shader->setMat4("projection", m_projection);
-    
-    // 1. 绘制控制多边形（虚线效果用浅色）
-    drawControlPolygon(curve.controlPoints(), 0.5f, 0.5f, 0.5f);
-    
-    // 2. 绘制 de Casteljau 中间过程
-    if (showDeCasteljau && u >= 0.0 && u <= 1.0) 
-    {
-        auto pyramid = curve.deCasteljauPyramid(u);
-        drawDeCasteljauPyramid(pyramid);
-    }
-    
-    // 3. 绘制曲线本身（最后绘制，覆盖在最上层）
-    auto curvePoints = curve.sample(100);
-    drawCurve(curvePoints, 0.1f, 0.1f, 0.1f, 3.0f);
-    
-    // 4. 绘制控制点
-    drawPoints(curve.controlPoints(), 0.2f, 0.4f, 0.8f, 12.0f);
-    
-    // 5. 高亮当前 u 对应的曲线点
-    if (u >= 0.0 && u <= 1.0) 
-    {
-        nurbs::PointList highlight = {curve.evaluate(u)};
-        drawPoints(highlight, 1.0f, 0.2f, 0.2f, 16.0f);
-    }
+    m_projection[0] = 2.0f / (right - left);                // X 轴缩放
+    m_projection[5] = 2.0f / (top - bottom);                // Y 轴缩放
+    m_projection[10] = -2.0f / (far - near);                // Z 轴缩放
+    m_projection[12] = -(right + left) / (right - left);    // X 轴平移
+    m_projection[13] = -(top + bottom) / (top - bottom);    // Y 轴平移
+    m_projection[14] = -(far + near) / (far - near);        // Z 轴平移
+    m_projection[15] = 1.0f;                                // 齐次坐标
 }
 
 void CurveRenderer::drawCurve(const nurbs::PointList& points, float r, float g, float b, float lineWidth) 
