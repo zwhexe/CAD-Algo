@@ -12,9 +12,8 @@ namespace nurbs
 BezierCurve::BezierCurve(const PointList& controlPoints) 
     : m_controlPoints(controlPoints) 
 {
-    if (controlPoints.size() < 2) {
+    if (controlPoints.size() < 2)
         throw std::invalid_argument("Bézier curve requires at least 2 control points");
-    }
 }
 
 /**
@@ -28,20 +27,19 @@ BezierCurve::BezierCurve(const PointList& controlPoints)
  * 时间复杂度: O(n²)
  * 空间复杂度: O(n) (原地算法)
  */
-Point BezierCurve::evaluate(double u) const {
+Point BezierCurve::evaluate(double u) const 
+{
     const int n = degree();
-    
     // 复制控制点到工作数组
     PointList Q = m_controlPoints;
-    
     // n 轮迭代，每轮减少一个点
-    for (int r = 1; r <= n; r++) {
-        for (int i = 0; i <= n - r; i++) {
-            // 核心操作: 线性插值 (1-u)·Q[i] + u·Q[i+1]
+    for (int r = 1; r <= n; r++) 
+    {
+        for (int i = 0; i <= n - r; i++) 
+        { // 核心操作: 线性插值 (1-u)·Q[i] + u·Q[i+1]
             Q[i] = Point::lerp(Q[i], Q[i + 1], u);
         }
     }
-    
     return Q[0];
 }
 
@@ -58,25 +56,24 @@ Point BezierCurve::evaluate(double u) const {
  *                         ↘   ↙
  *   Level 3:             P0[3] = C(u)
  */
-std::vector<PointList> BezierCurve::deCasteljauPyramid(double u) const {
+std::vector<PointList> BezierCurve::deCasteljauPyramid(double u) const 
+{
     const int n = degree();
     std::vector<PointList> pyramid;
     
     // Level 0: 原始控制点
     pyramid.push_back(m_controlPoints);
     
-    // 逐层计算
-    for (int r = 1; r <= n; r++) {
+    for (int r = 1; r <= n; r++) 
+    { // 逐层计算
         PointList level;
         const PointList& prev = pyramid[r - 1];
-        
-        for (size_t i = 0; i < prev.size() - 1; i++) {
+        for (size_t i = 0; i < prev.size() - 1; i++) 
+        { // 线性插值
             level.push_back(Point::lerp(prev[i], prev[i + 1], u));
         }
-        
         pyramid.push_back(level);
     }
-    
     return pyramid;
 }
 
@@ -90,31 +87,34 @@ std::vector<PointList> BezierCurve::deCasteljauPyramid(double u) const {
  * 2. 当 n 很大时，容易溢出
  * 3. 主要用于理论验证和对比
  */
-Point BezierCurve::evaluateBernstein(double u) const {
+Point BezierCurve::evaluateBernstein(double u) const 
+{
     const int n = degree();
     Point result(0, 0, 0);
-    
-    for (int i = 0; i <= n; i++) {
+    for (int i = 0; i <= n; i++) 
+    {
         double B = bernsteinBasis(i, n, u);
         result += m_controlPoints[i] * B;
     }
-    
     return result;
 }
 
-double BezierCurve::binomial(int n, int k) {
+double BezierCurve::binomial(int n, int k) 
+{
     if (k < 0 || k > n) return 0;
     if (k == 0 || k == n) return 1;
     
     // 使用递推避免大数: C(n,k) = C(n,k-1) * (n-k+1) / k
     double result = 1.0;
-    for (int i = 0; i < k; i++) {
+    for (int i = 0; i < k; i++) 
+    {
         result *= static_cast<double>(n - i) / (i + 1);
     }
     return result;
 }
 
-double BezierCurve::bernsteinBasis(int i, int n, double u) {
+double BezierCurve::bernsteinBasis(int i, int n, double u) 
+{
     return binomial(n, i) * std::pow(u, i) * std::pow(1.0 - u, n - i);
 }
 
@@ -127,7 +127,8 @@ double BezierCurve::bernsteinBasis(int i, int n, double u) {
  * 左曲线: 从 u=0 到 u=u_split
  * 右曲线: 从 u=u_split 到 u=1
  */
-std::pair<PointList, PointList> BezierCurve::subdivide(double u) const {
+std::pair<PointList, PointList> BezierCurve::subdivide(double u) const 
+{
     auto pyramid = deCasteljauPyramid(u);
     const int n = degree();
     
@@ -135,13 +136,15 @@ std::pair<PointList, PointList> BezierCurve::subdivide(double u) const {
     
     // 左曲线: 金字塔每层的第一个点
     // P_0^{[0]}, P_0^{[1]}, ..., P_0^{[n]}
-    for (int r = 0; r <= n; r++) {
+    for (int r = 0; r <= n; r++) 
+    {
         left.push_back(pyramid[r][0]);
     }
     
     // 右曲线: 金字塔每层的最后一个点 (从下往上)
     // P_0^{[n]}, P_1^{[n-1]}, ..., P_n^{[0]}
-    for (int r = n; r >= 0; r--) {
+    for (int r = n; r >= 0; r--) 
+    {
         right.push_back(pyramid[r].back());
     }
     
@@ -158,46 +161,41 @@ std::pair<PointList, PointList> BezierCurve::subdivide(double u) const {
  * 
  * 对于 de Casteljau: C'(u) 可以从金字塔直接计算
  */
-Point BezierCurve::derivative(double u, int order) const {
-    if (order <= 0) {
+Point BezierCurve::derivative(double u, int order) const 
+{
+    if (order <= 0)
         return evaluate(u);
-    }
     
     PointList derivPts = derivativeControlPoints(order);
-    
     if (derivPts.empty()) 
-{
         return Point(0, 0, 0);  // 导数为常数0
-    }
     
     // 用新的控制点求值
     BezierCurve derivCurve(derivPts);
     return derivCurve.evaluate(u);
 }
 
-PointList BezierCurve::derivativeControlPoints(int order) const {
-    if (order <= 0) {
+PointList BezierCurve::derivativeControlPoints(int order) const 
+{
+    if (order <= 0)
         return m_controlPoints;
-    }
     
     const int n = degree();
-    
-    if (order > n) {
+    if (order > n)
         return {};  // 超过次数，导数为0
-    }
     
     // 递推: 每求一阶导数，次数降1
     PointList pts = m_controlPoints;
     
-    for (int k = 0; k < order; k++) {
+    for (int k = 0; k < order; k++) 
+    {
         int m = static_cast<int>(pts.size()) - 1;  // 当前次数
         PointList newPts;
         
-        for (int i = 0; i < m; i++) {
-            // Q_i = m · (P_{i+1} - P_i)
+        for (int i = 0; i < m; i++) 
+        { // Q_i = m · (P_{i+1} - P_i)
             newPts.push_back((pts[i + 1] - pts[i]) * m);
         }
-        
         pts = newPts;
     }
     
@@ -214,7 +212,8 @@ PointList BezierCurve::derivativeControlPoints(int order) const {
  *   P_i^{new} = (i/(n+1)) · P_{i-1} + (1 - i/(n+1)) · P_i,  i=1,...,n
  *   P_{n+1}^{new} = P_n
  */
-BezierCurve BezierCurve::degreeElevate() const {
+BezierCurve BezierCurve::degreeElevate() const 
+{
     const int n = degree();
     PointList newPoints(n + 2);
     
@@ -223,7 +222,8 @@ BezierCurve BezierCurve::degreeElevate() const {
     newPoints[n + 1] = m_controlPoints[n];
     
     // 中间点
-    for (int i = 1; i <= n; i++) {
+    for (int i = 1; i <= n; i++) 
+    {
         double alpha = static_cast<double>(i) / (n + 1);
         newPoints[i] = m_controlPoints[i - 1] * alpha + 
                        m_controlPoints[i] * (1.0 - alpha);
@@ -232,29 +232,31 @@ BezierCurve BezierCurve::degreeElevate() const {
     return BezierCurve(newPoints);
 }
 
-PointList BezierCurve::sample(int numSamples) const {
+PointList BezierCurve::sample(int numSamples) const 
+{
     PointList points;
     points.reserve(numSamples);
-    
-    for (int i = 0; i < numSamples; i++) {
+    // Calculate points on the curve at regular intervals of u
+    for (int i = 0; i < numSamples; i++) 
+    {
         double u = static_cast<double>(i) / (numSamples - 1);
         points.push_back(evaluate(u));
-    }
-    
+    } 
     return points;
 }
 
-void BezierCurve::setControlPoint(int index, const Point& p) {
-    if (index < 0 || index >= static_cast<int>(m_controlPoints.size())) {
+void BezierCurve::setControlPoint(int index, const Point& p) 
+{
+    if (index < 0 || index >= static_cast<int>(m_controlPoints.size())) 
         throw std::out_of_range("Control point index out of range");
-    }
+
     m_controlPoints[index] = p;
 }
 
 void BezierCurve::setControlPoints(const PointList& points) {
-    if (points.size() < 2) {
+    if (points.size() < 2)
         throw std::invalid_argument("Bézier curve requires at least 2 control points");
-    }
+
     m_controlPoints = points;
 }
 
@@ -431,7 +433,7 @@ Point RationalBezierCurve::derivative(double u, int order) const
         for (int i = 0; i < n; i++) 
         { // 导数控制点: n * (P_{i+1}·w_{i+1} - P_i·w_i)
             Point dA = (m_controlPoints[i + 1] * m_weights[i + 1] - 
-                       m_controlPoints[i] * m_weights[i]) * n;
+                        m_controlPoints[i] * m_weights[i]) * n;
             double dw = (m_weights[i + 1] - m_weights[i]) * n;
             double B = BezierCurve::bernsteinBasis(i, n - 1, u);
             A_prime += dA * B;

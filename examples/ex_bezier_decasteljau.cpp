@@ -19,7 +19,11 @@
 #include <cmath>
 
 // 应用状态
-enum class CurveType { Bezier = 0, RationalBezier = 1 };
+enum class CurveType { 
+    Bezier         = 0, 
+    RationalBezier = 1
+};
+
 struct AppState 
 {
     nurbs::PointList controlPoints;
@@ -35,7 +39,7 @@ struct AppState
     float viewBottom = -0.5f;
     float viewTop = 3.0f;
     
-    CurveType nurbsType = CurveType::Bezier;
+    CurveType nurbsType = CurveType::RationalBezier;
 };
 
 // 屏幕坐标转世界坐标
